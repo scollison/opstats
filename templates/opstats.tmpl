@@ -1,0 +1,20 @@
+<table class="table table-responsive">
+<tr>
+	<th>PID</th>
+	<th>Username</th>
+	<th>Query</th>
+	<th>Waiting</th>
+	<th>Duration</th>
+</tr>
+{{range .}}
+	{{if .NotSetOperation}}
+	<tr>
+		<td>{{ .Pid }}</td>
+		<td>{{ .UserName }}</td>
+		<td>{{ .Query }}</td>
+		<td>{{ .Waiting }}</td>
+		<td>{{ .StartTime }}</td>
+	</tr>
+	{{end}}
+{{end}}
+</table>
