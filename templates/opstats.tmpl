@@ -1,20 +1,44 @@
-<table class="table table-responsive">
+<div class="page-header">
+	<h1>opstats <small>{{ .Hostname }}</small></h1>
+	<h4>Session Count<br>
+	<small>
+		{{ len .QueryList }} Total -
+		{{ .QueryList.IdleCount }} Idle =
+		{{ .QueryList.ActiveCount }} Active
+	</small>
+	</h4>
+</div>
+
+<div class="panel panel-info">
+<!-- Default panel contents -->
+<div class="panel-heading text-center"><strong>RUNNING QUERIES</strong></div>
+
+<table class="table table-responsive table-condensed table-bordered table-hover tablesorter" id="queryTable">
+<thead>
 <tr>
-	<th>PID</th>
-	<th>Username</th>
-	<th>Query</th>
-	<th>Waiting</th>
-	<th>Duration</th>
+	<th>PID <span class="glyphicon glyphicon-sort"></span></th>
+	<th>Username <span class="glyphicon glyphicon-sort"></span></th>
+	<th>Query <span class="glyphicon glyphicon-sort"></span></th>
+	<th>Waiting <span class="glyphicon glyphicon-sort"></span></th>
+	<th>Duration <span class="glyphicon glyphicon-sort"></span></th>
+	<th>Start Time <span class="glyphicon glyphicon-sort"></span></th>
 </tr>
-{{range .}}
+</thead>
+<tbody>
+{{range .QueryList}}
 	{{if .NotSetOperation}}
 	<tr>
 		<td>{{ .Pid }}</td>
 		<td>{{ .UserName }}</td>
 		<td>{{ .Query }}</td>
 		<td>{{ .Waiting }}</td>
-		<td>{{ .StartTime }}</td>
+		<td>{{ .Duration }}</td>
+		<td>{{ .StartTime.Weekday.String }} -- 
+			{{ .StartTime.Hour }}:{{ .StartTime.Minute }}
+		</td>
 	</tr>
 	{{end}}
 {{end}}
+</tbody>
 </table>
+</div> <!-- /panel -->

@@ -15,12 +15,19 @@
   </head>
   <body>
     <!-- Render the current template here -->
-    {{ yield }}
+    <div class="container">
+	    {{ yield }}
+    </div>
 
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
     <script src="jquery/jquery.min.js"></script>
 
+    <!-- tablesorter -->
+    <script src="jquery.tablesorter/js/jquery.tablesorter.min.js"></script>
+
     <!-- Include all compiled plugins (below), or include individual files as needed -->
     <script src="bootstrap/dist/js/bootstrap.min.js"></script>
+
+    <script src="opstats.js"></script>
   </body>
 </html>

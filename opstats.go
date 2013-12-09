@@ -5,6 +5,7 @@ import (
 	"github.com/codegangsta/martini"
 	"github.com/codegangsta/martini-contrib/render"
 	_ "github.com/lib/pq"
+	"os"
 	"strings"
 	"time"
 	//"fmt"
@@ -19,13 +20,18 @@ func main() {
 		panic(err)
 	}
 
+	hostname, err := os.Hostname()
+	if err != nil {
+		panic(err)
+	}
+
 	m := martini.Classic()
 	m.Use(render.Renderer(render.Options{
 		Layout: "layout",
 	}))
 
 	m.Get("/", func(r render.Render) {
-		r.HTML(200, "opstats", ql)
+		r.HTML(200, "opstats", &opstatPkg{QueryList: ql, Hostname: hostname})
 	})
 
 	m.Run()
@@ -76,6 +82,12 @@ func getRunningQueries(db *sql.DB) (activeQueryList, error) {
 	return ql, nil
 }
 
+// A convenience type to feed templates with.
+type opstatPkg struct {
+	QueryList activeQueryList
+	Hostname  string
+}
+
 type activeQuery struct {
 	Pid       int
 	UserName  string
@@ -91,8 +103,27 @@ func (aq *activeQuery) NotSetOperation() bool {
 	return true
 }
 
+func (aq *activeQuery) Duration() time.Duration {
+	return time.Since(aq.StartTime)
+}
+
 type activeQueryList []activeQuery
 
 func (aql *activeQueryList) SessionCount() int {
 	return len(*aql)
+}
+
+func (aql *activeQueryList) IdleCount() int {
+	count := 0
+	for _, v := range *aql {
+		if v.NotSetOperation() {
+			continue
+		}
+		count = count + 1
+	}
+	return count
+}
+
+func (aql *activeQueryList) ActiveCount() int {
+	return len(*aql) - aql.IdleCount()
 }
