@@ -15,11 +15,6 @@ func main() {
 	db := dbSetup()
 	defer db.Close()
 
-	ql, err := getRunningQueries(db)
-	if err != nil {
-		panic(err)
-	}
-
 	hostname, err := os.Hostname()
 	if err != nil {
 		panic(err)
@@ -31,6 +26,10 @@ func main() {
 	}))
 
 	m.Get("/", func(r render.Render) {
+		ql, err := getRunningQueries(db)
+		if err != nil {
+			panic(err)
+		}
 		r.HTML(200, "opstats", &opstatPkg{QueryList: ql, Hostname: hostname})
 	})
 
