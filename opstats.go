@@ -1,10 +1,10 @@
 package main
 
 import (
-	_ "github.com/lib/pq"
 	"database/sql"
 	"github.com/codegangsta/martini"
 	"github.com/codegangsta/martini-contrib/render"
+	_ "github.com/lib/pq"
 	"os"
 	"strings"
 	"time"
@@ -100,7 +100,7 @@ func getLockList(db *sql.DB) (lockList, error) {
 
 	for locks.Next() {
 		if err := locks.Scan(&l.Pid, &l.Relation, &l.LockType,
-		&l.Lock, &l.LockHolder); err != nil {
+			&l.Lock, &l.LockHolder); err != nil {
 			return lockList{}, err
 		}
 
@@ -158,10 +158,10 @@ func (aql *activeQueryList) ActiveCount() int {
 }
 
 type lock struct {
-	Pid int
-	Relation string
-	LockType string
-	Lock     string
+	Pid        int
+	Relation   string
+	LockType   string
+	Lock       string
 	LockHolder bool
 }
 
