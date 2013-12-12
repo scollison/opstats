@@ -10,7 +10,6 @@
 </div>
 
 <div class="panel panel-info">
-<!-- Default panel contents -->
 <div class="panel-heading text-center"><strong>RUNNING QUERIES</strong></div>
 
 <table class="table table-responsive table-condensed table-bordered table-hover tablesorter" id="queryTable">
@@ -38,6 +37,33 @@
 		</td>
 	</tr>
 	{{end}}
+{{end}}
+</tbody>
+</table>
+</div> <!-- /panel -->
+
+<div class="panel panel-info">
+<div class="panel-heading text-center"><strong>Locks</strong></div>
+
+<table class="table table-responsive table-condensed table-bordered table-hover tablesorter" id="queryTable">
+<thead>
+<tr>
+	<th>PID <span class="glyphicon glyphicon-sort"></span></th>
+	<th>Relation <span class="glyphicon glyphicon-sort"></span></th>
+	<th>Lock Type <span class="glyphicon glyphicon-sort"></span></th>
+	<th>Lock <span class="glyphicon glyphicon-sort"></span></th>
+	<th>Lock Holder <span class="glyphicon glyphicon-sort"></span></th>
+</tr>
+</thead>
+<tbody>
+{{range .LockList}}
+	<tr>
+		<td>{{ .Pid }}</td>
+		<td>{{ .Relation }}</td>
+		<td>{{ .LockType }}</td>
+		<td>{{ .Lock }}</td>
+		<td>{{ .LockHolder }}</td>
+	</tr>
 {{end}}
 </tbody>
 </table>

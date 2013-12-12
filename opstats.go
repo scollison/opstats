@@ -1,48 +1,56 @@
 package main
 
 import (
+	_ "github.com/lib/pq"
 	"database/sql"
 	"github.com/codegangsta/martini"
 	"github.com/codegangsta/martini-contrib/render"
-	_ "github.com/lib/pq"
 	"os"
 	"strings"
 	"time"
-	//"fmt"
 )
 
 func main() {
-	db := dbSetup()
-	defer db.Close()
-
-	hostname, err := os.Hostname()
-	if err != nil {
-		panic(err)
-	}
-
+	// A classic martini that uses templates/layout.tmpl
 	m := martini.Classic()
 	m.Use(render.Renderer(render.Options{
 		Layout: "layout",
 	}))
 
-	m.Get("/", func(r render.Render) {
+	hostname, _ := os.Hostname()
+
+	db, err := dbSetup("dbname=postgres user=postgres host=/tmp sslmode=disable")
+	if err != nil {
+		panic(err)
+	}
+	defer db.Close()
+
+	m.Get("/", func(r render.Render) (int, string) {
+		ll, err := getLockList(db)
+		if err != nil {
+			return 500, err.Error()
+		}
+
 		ql, err := getRunningQueries(db)
 		if err != nil {
-			panic(err)
+			return 500, err.Error()
 		}
-		r.HTML(200, "opstats", &opstatPkg{QueryList: ql, Hostname: hostname})
+
+		r.HTML(200, "opstats", &opstatPkg{QueryList: ql, LockList: ll, Hostname: hostname})
+
+		return 200, "No Error"
 	})
 
 	m.Run()
 }
 
-func dbSetup() *sql.DB {
-	db, err := sql.Open("postgres", "sslmode=disable")
+func dbSetup(options string) (*sql.DB, error) {
+	db, err := sql.Open("postgres", options)
 	if err != nil {
-		panic(err)
+		return db, err
 	}
 
-	return db
+	return db, err
 }
 
 func getRunningQueries(db *sql.DB) (activeQueryList, error) {
@@ -50,7 +58,7 @@ func getRunningQueries(db *sql.DB) (activeQueryList, error) {
 	queries, err := db.Query(`select pid, usename, substring(query,1,60), 
 	waiting, backend_start from pg_stat_activity order by 5 desc`)
 	if err != nil {
-		panic(err)
+		return activeQueryList{}, err
 	}
 
 	q := activeQuery{}
@@ -75,15 +83,37 @@ func getRunningQueries(db *sql.DB) (activeQueryList, error) {
 
 	err = queries.Close()
 	if err != nil {
-		panic(err)
+		return activeQueryList{}, err
 	}
 
 	return ql, nil
 }
 
+func getLockList(db *sql.DB) (lockList, error) {
+	locks, err := db.Query(`SELECT a.pid, b.relname, a.locktype, a.mode as Lock, a.granted as Lock_holder from pg_locks a, pg_class b where a.relation=b.oid and relname not like 'pg_%' order by 3;`)
+	if err != nil {
+		return lockList{}, err
+	}
+
+	l := lock{}
+	ll := lockList{}
+
+	for locks.Next() {
+		if err := locks.Scan(&l.Pid, &l.Relation, &l.LockType,
+		&l.Lock, &l.LockHolder); err != nil {
+			return lockList{}, err
+		}
+
+		ll = append(ll, l)
+	}
+
+	return ll, nil
+}
+
 // A convenience type to feed templates with.
 type opstatPkg struct {
 	QueryList activeQueryList
+	LockList  lockList
 	Hostname  string
 }
 
@@ -126,3 +156,13 @@ func (aql *activeQueryList) IdleCount() int {
 func (aql *activeQueryList) ActiveCount() int {
 	return len(*aql) - aql.IdleCount()
 }
+
+type lock struct {
+	Pid int
+	Relation string
+	LockType string
+	Lock     string
+	LockHolder bool
+}
+
+type lockList []lock
